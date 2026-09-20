@@ -100,12 +100,25 @@ class Parser:
     # adds a level of nested containers. Refuse documents beyond this depth.
     MAX_NESTING_DEPTH = 100
 
-    def __init__(self, string: str | bytes) -> None:
+    def __init__(self, string: str | bytes, track_spans: bool = False) -> None:
         # Input to parse
         self._src = Source(decode(string))
 
         self._aot_stack: list[Key] = []
         self._nesting_depth = 0
+        # When enabled, every top-level key/value pair and every table header
+        # (including AoT elements) gets a ``[start, end)`` offset span recorded
+        # on the resulting Item. Used by the structured merge API to provide
+        # source evidence and untouched-region verification.
+        self._track_spans = track_spans
+
+    def _attach_span(self, item: Item, start: int, end: int | None = None) -> Item:
+        """Record a ``[start, end)`` source span on ``item`` if tracking."""
+        if self._track_spans:
+            setattr(
+                item, "_source_span", (start, self._idx if end is None else end)
+            )
+        return item
 
     @property
     def _state(self) -> _StateHandler:
@@ -360,6 +373,7 @@ class Parser:
 
     def _parse_key_value(self, parse_comment: bool = False) -> tuple[Key, Item]:
         # Leading indent
+        kv_start = self._idx
         self.mark()
 
         self._src.advance_while(_SPACES)
@@ -401,6 +415,14 @@ class Parser:
             val.trivia.trail = ""
 
         val.trivia.indent = indent
+
+        if self._track_spans:
+            span = (kv_start, self._idx)
+            setattr(val, "_source_span", span)
+            # A dotted key is later expanded into nested super-tables by the
+            # container; stamping the full line span on the key lets the merge
+            # indexer recover the span of the nested leaf value.
+            setattr(key, "_source_span", span)
 
         return key, val
 
@@ -1014,6 +1036,7 @@ class Parser:
                 InternalParserError, "_parse_table() called on non-bracket character."
             )
 
+        table_start = self._idx
         indent = self.extract()
         self.inc()  # Skip opening bracket
 
@@ -1154,6 +1177,10 @@ class Parser:
                         "_parse_item() returned None on a non-bracket character.",
                     )
         table.value._validate_out_of_order_table()
+        if self._track_spans:
+            # The concrete leaf table spans from its header line through the
+            # end of the last line that belongs to it.
+            setattr(table, "_source_span", (table_start, self._idx))
         if isinstance(result, Null):
             result = table
 

@@ -1,5 +1,20 @@
 # Change Log
 
+## [Unreleased]
+
+### Added
+
+- Structured three-way TOML merge API (`tomlkit.merge`, `tomlkit.MergeResult`,
+  `tomlkit.Conflict`, `tomlkit.ConflictKind`, `tomlkit.CommentPolicy`,
+  `tomlkit.SourceRange` and `tomlkit.parse_for_merge`): merges by semantic
+  path and container type instead of by text line, so dotted keys and
+  explicit tables resolve to the same node, arrays of tables pair by caller
+  supplied identity keys (never by position), and affected containers are
+  rebuilt structurally to avoid duplicate/out-of-order tables. Conflicts carry
+  base/ours/theirs values with source spans and can be resolved as ours,
+  theirs, deleted or a custom `Item`; regions the merge does not touch keep
+  *ours*' exact representation, including comments and CRLF.
+
 ## [0.15.1] - 2026-07-17
 
 ### Changed

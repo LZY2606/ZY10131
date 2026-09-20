@@ -25,12 +25,26 @@ from tomlkit.api import time
 from tomlkit.api import unregister_encoder
 from tomlkit.api import value
 from tomlkit.api import ws
+from tomlkit.merge import CommentPolicy
+from tomlkit.merge import Conflict
+from tomlkit.merge import ConflictKind
+from tomlkit.merge import MergeResult
+from tomlkit.merge import SourceRange
+from tomlkit.merge import merge
+from tomlkit.merge import parse_for_merge
 
 
 __version__ = "0.15.1"
 __all__ = [
     "TOMLDocument",
     "aot",
+    "merge",
+    "parse_for_merge",
+    "MergeResult",
+    "Conflict",
+    "ConflictKind",
+    "CommentPolicy",
+    "SourceRange",
     "array",
     "boolean",
     "comment",

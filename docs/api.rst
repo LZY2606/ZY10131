@@ -44,5 +44,13 @@ TOML Exceptions
 ---------------
 
 .. automodule:: tomlkit.exceptions
-   :members:
-   :show-inheritance:
+    :members:
+    :show-inheritance:
+
+Structured Merge
+----------------
+
+.. automodule:: tomlkit.merge
+    :members:
+    :show-inheritance:
+    :undoc-members:

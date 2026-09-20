@@ -476,6 +476,16 @@ class Item:
         self._trivia = trivia
 
     @property
+    def source_span(self) -> tuple[int, int] | None:
+        """``[start, end)`` char offsets of the item in its source string.
+
+        Only populated when the document was parsed with source-span tracking
+        enabled (see :func:`tomlkit.merge.parse_for_merge`); otherwise it is
+        ``None``.
+        """
+        return getattr(self, "_source_span", None)
+
+    @property
     def trivia(self) -> Trivia:
         """The trivia element associated with this item"""
         return self._trivia
