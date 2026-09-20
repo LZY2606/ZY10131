@@ -25,10 +25,23 @@ from tomlkit.api import time
 from tomlkit.api import unregister_encoder
 from tomlkit.api import value
 from tomlkit.api import ws
+from tomlkit.merge import CommentConflictPolicy
+from tomlkit.merge import Conflict
+from tomlkit.merge import ConflictKind
+from tomlkit.merge import MergeResult
+from tomlkit.merge import Resolution
+from tomlkit.merge import identity_key
+from tomlkit.merge import merge3
+from tomlkit.merge import merge_documents
 
 
 __version__ = "0.15.1"
 __all__ = [
+    "CommentConflictPolicy",
+    "Conflict",
+    "ConflictKind",
+    "MergeResult",
+    "Resolution",
     "TOMLDocument",
     "aot",
     "array",
@@ -40,6 +53,7 @@ __all__ = [
     "dump",
     "dumps",
     "float_",
+    "identity_key",
     "inline_table",
     "integer",
     "item",
@@ -47,6 +61,8 @@ __all__ = [
     "key_value",
     "load",
     "loads",
+    "merge3",
+    "merge_documents",
     "nl",
     "parse",
     "register_encoder",

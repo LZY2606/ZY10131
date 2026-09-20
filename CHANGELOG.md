@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased]
+
+### Added
+
+- Add a structured three-way merge API (`tomlkit.merge3` / `tomlkit.merge_documents`) that merges TOML documents by semantic path and container type instead of by text lines. It merges independent key edits, treats dotted keys and explicit table headers as the same node, keeps the untouched representation of the ours side, and returns typed conflicts (`value`, `structure`, `comment`, `delete`, `delete-descendants`, `aot-candidates`) with base/ours/theirs values and source spans. Comment/value collisions are controlled by a public `CommentConflictPolicy`, arrays of tables accept a caller-supplied identity policy (`identity_key(...)`) and conservatively report candidates instead of matching elements by position when no stable identity is available.
+
 ## [0.15.1] - 2026-07-17
 
 ### Changed

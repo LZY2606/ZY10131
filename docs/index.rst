@@ -46,6 +46,7 @@ Contents
    :maxdepth: 2
 
    quickstart
+   merge
    api
 
 

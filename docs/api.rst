@@ -21,6 +21,11 @@ TOML Document
    :show-inheritance:
    :inherited-members:
 
+Structured merge
+----------------
+
+See :doc:`merge` for the guide and API reference.
+
 
 TOML File
 ---------

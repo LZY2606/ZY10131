@@ -8,6 +8,7 @@ from typing import Any
 from typing import Callable
 
 from tomlkit._compat import decode
+from tomlkit._merge_spans import SpanBook
 from tomlkit._utils import RFC_3339_LOOSE
 from tomlkit._utils import _escaped
 from tomlkit._utils import parse_rfc3339
@@ -106,6 +107,15 @@ class Parser:
 
         self._aot_stack: list[Key] = []
         self._nesting_depth = 0
+        # Optional source-span collector used by the structured merge API.
+        # When set, the parser records one span per semantic entry (key/value
+        # pair or table header) on the book; parsing behaviour is unchanged.
+        self._span_book: SpanBook | None = None
+
+    def with_span_book(self, book: SpanBook | None) -> Parser:
+        """Attach (or detach) a :class:`SpanBook` and return ``self``."""
+        self._span_book = book
+        return self
 
     @property
     def _state(self) -> _StateHandler:
@@ -361,6 +371,9 @@ class Parser:
     def _parse_key_value(self, parse_comment: bool = False) -> tuple[Key, Item]:
         # Leading indent
         self.mark()
+        entry_start = self._idx
+        if self._span_book is not None:
+            self._span_book.begin_entry(entry_start)
 
         self._src.advance_while(_SPACES)
 
@@ -401,6 +414,11 @@ class Parser:
             val.trivia.trail = ""
 
         val.trivia.indent = indent
+        if self._span_book is not None:
+            # The leaf value owns the span; for a dotted key (``a.b = 1``)
+            # that is the value nested inside the implicit super tables, and
+            # the span still covers the whole source entry.
+            self._span_book.record_entry(val, self._idx)
 
         return key, val
 
@@ -1015,6 +1033,7 @@ class Parser:
             )
 
         indent = self.extract()
+        header_start = self._idx - len(indent)
         self.inc()  # Skip opening bracket
 
         if self.end():
@@ -1066,6 +1085,7 @@ class Parser:
             self.inc()  # Skip second closing bracket
 
         cws, comment, trail = self._parse_comment_trail()
+        header_end = self._idx
 
         result: Table | AoT = Null()  # type: ignore[assignment]
         table = Table(
@@ -1120,6 +1140,13 @@ class Parser:
         else:
             if name_parts:
                 key = name_parts[0]
+
+        if self._span_book is not None:
+            # Attach the header span to the concrete leaf table. For a
+            # multi-part header like ``[a.b]`` the intermediate super tables
+            # are implicit (they render no header themselves); only the leaf
+            # corresponds to this exact ``[...]`` slice of source.
+            self._span_book.record_header(table, header_start, header_end)
 
         while not self.end():
             parsed = self._parse_item()
